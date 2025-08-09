@@ -1,0 +1,22 @@
+# Example Terraform variables file for Nightscout AWS Deployment
+# Copy this file to terraform.tfvars and modify the values as needed
+
+# AWS Configuration
+aws_region = "us-east-1"
+
+# Terraform Backend Configuration
+# For S3 backend: copy backend.tf.example to backend.tf and configure your bucket
+# For local backend: leave backend.tf.example as is (don't copy to backend.tf)
+terraform_state_bucket = false  # Set to your S3 bucket name or false for local state
+
+# Networking Configuration
+resources_prefix_name = "nightscout"
+
+# VPC Flow Logs Configuration
+retention_in_days = 14
+traffic_type     = "REJECT"
+enable_flow_logs = false
+
+# Private Subnets Configuration
+# Set to true if you need private subnets for resources like RDS, Lambda, etc.
+enable_private_subnets = true

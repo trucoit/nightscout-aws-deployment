@@ -1,0 +1,22 @@
+# S3 Backend Configuration Example
+# Copy this file to backend.tf and update the bucket name to enable S3 backend
+# Remove or don't copy this file to use local state storage
+
+terraform {
+  backend "s3" {
+    bucket  = "your-terraform-state-bucket-name"  # Replace with your S3 bucket name
+    key     = "nightscout/terraform.tfstate"
+    region  = "us-east-1"  # Should match your aws_region variable
+    encrypt = true
+    
+    # Optional: Add additional configuration
+    # versioning = true
+    # server_side_encryption_configuration {
+    #   rule {
+    #     apply_server_side_encryption_by_default {
+    #       sse_algorithm = "AES256"
+    #     }
+    #   }
+    # }
+  }
+}
