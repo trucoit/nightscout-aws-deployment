@@ -3,7 +3,6 @@
 ## -------------------------------------------------------------------------------------------------------------------
 ## Required Variables (from networking module)
 ## -------------------------------------------------------------------------------------------------------------------
-
 variable "vpc_id" {
   description = "VPC ID from networking module"
   type        = string
@@ -19,10 +18,10 @@ variable "resources_prefix_name" {
   type        = string
 }
 
+
 ## -------------------------------------------------------------------------------------------------------------------
 ## ECS Configuration
 ## -------------------------------------------------------------------------------------------------------------------
-
 variable "target_capacity" {
   description = "Target capacity utilization for ECS capacity provider"
   type        = number
@@ -38,19 +37,19 @@ variable "service_desired_count" {
 variable "task_cpu" {
   description = "CPU units for the task definition"
   type        = number
-  default     = 512
+  default     = 1024
 }
 
 variable "task_memory" {
   description = "Memory (MB) for the task definition"
   type        = number
-  default     = 1024
+  default     = 2048
 }
 
 variable "container_name" {
   description = "Name of the container"
   type        = string
-  default     = "app"
+  default     = "application"
 }
 
 variable "container_image" {
@@ -81,7 +80,7 @@ variable "container_environment" {
 variable "asg_min_size" {
   description = "Minimum size of the Auto Scaling Group"
   type        = number
-  default     = 1
+  default     = 0
 }
 
 variable "asg_max_size" {

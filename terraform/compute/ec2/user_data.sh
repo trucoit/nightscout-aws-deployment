@@ -18,19 +18,19 @@ cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << EOF
           {
             "file_path": "/var/log/messages",
             "log_group_name": "${log_group_name}",
-            "log_stream_name": "ec2/messages/{instance_id}",
+            "log_stream_name": "ec2/{instance_id}/messages",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/ecs/ecs-agent.log",
             "log_group_name": "${log_group_name}",
-            "log_stream_name": "ec2/ecs-agent/{instance_id}",
+            "log_stream_name": "ec2/{instance_id}/ecs-agent",
             "timezone": "UTC"
           },
           {
             "file_path": "/var/log/ecs/ecs-init.log",
             "log_group_name": "${log_group_name}",
-            "log_stream_name": "ec2/ecs-init/{instance_id}",
+            "log_stream_name": "ec2/{instance_id}/ecs-init",
             "timezone": "UTC"
           }
         ]

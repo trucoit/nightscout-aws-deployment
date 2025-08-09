@@ -4,9 +4,6 @@
 ## Data Sources
 ## -------------------------------------------------------------------------------------------------------------------
 
-data "aws_ssm_parameter" "ecs_optimized_ami" {
-  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
-}
 
 data "aws_availability_zones" "available" {
   state = "available"
@@ -17,10 +14,13 @@ data "aws_region" "current" {}
 ## -------------------------------------------------------------------------------------------------------------------
 ## Launch Template
 ## -------------------------------------------------------------------------------------------------------------------
-
 resource "aws_launch_template" "ecs" {
   name_prefix   = "${var.resources_prefix_name}-"
-  image_id      = data.aws_ssm_parameter.ecs_optimized_ami.value
+
+  # This will point to the latest AMI dynamically
+  # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/create-launch-template.html#use-an-ssm-parameter-instead-of-an-ami-id
+  image_id      = "resolve:ssm:/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+  
   instance_type = var.instance_types[0]
 
   vpc_security_group_ids = [aws_security_group.ecs.id]
@@ -50,12 +50,12 @@ resource "aws_launch_template" "ecs" {
 ## -------------------------------------------------------------------------------------------------------------------
 ## Auto Scaling Group
 ## -------------------------------------------------------------------------------------------------------------------
-
 resource "aws_autoscaling_group" "ecs" {
   name                      = "${var.resources_prefix_name}-asg"
   vpc_zone_identifier       = var.public_subnet_ids
   health_check_type         = "EC2"
   health_check_grace_period = 300
+  protect_from_scale_in     = true
 
   min_size         = var.asg_min_size
   max_size         = var.asg_max_size
@@ -99,7 +99,6 @@ resource "aws_autoscaling_group" "ecs" {
 ## -------------------------------------------------------------------------------------------------------------------
 ## Security Group
 ## -------------------------------------------------------------------------------------------------------------------
-
 resource "aws_security_group" "ecs" {
   name_prefix = "${var.resources_prefix_name}-ecs-"
   vpc_id      = var.vpc_id
@@ -126,7 +125,6 @@ resource "aws_security_group" "ecs" {
 ## -------------------------------------------------------------------------------------------------------------------
 ## IAM Resources
 ## -------------------------------------------------------------------------------------------------------------------
-
 resource "aws_iam_role" "ecs_instance" {
   name = "${var.resources_prefix_name}-ecs-instance-role"
 
