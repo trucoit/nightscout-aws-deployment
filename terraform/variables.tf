@@ -1,12 +1,5 @@
 # Variables for Nightscout AWS Deployment
 
-# Terraform Backend Configuration
-variable "terraform_state_bucket" {
-  description = "S3 bucket name for Terraform state storage. Set to false to use local state."
-  type        = string
-  default     = false
-}
-
 # AWS Configuration
 variable "aws_region" {
   description = "AWS region for all resources"
@@ -50,5 +43,5 @@ variable "enable_flow_logs" {
 variable "enable_private_subnets" {
   description = "Enable private subnets and associated resources"
   type        = bool
-  default     = true
+  default     = false
 }
