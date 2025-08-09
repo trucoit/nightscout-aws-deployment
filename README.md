@@ -29,4 +29,4 @@ Please revise the [code of conduct](./CODE_OF_CONDUCT.MD).
 
 ## License
 
-These snippets are distributed under the [MIT-0 License](https://github.com/aws/mit-0). See [LICENSE](./LICENSE) for more information.
+The texts, interpretations and opinions reflect my own personal thoughts. The content is distributed under the [Creative Commons BY-SA 4.0 DEED](https://creativecommons.org/licenses/by-sa/4.0/). For more details, please refer to [LICENSE](./LICENSE) and [CC BY-SA 4.0 LEGAL CODE](https://creativecommons.org/licenses/by-sa/4.0/legalcode.en).
