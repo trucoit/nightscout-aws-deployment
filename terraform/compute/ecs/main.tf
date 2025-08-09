@@ -3,13 +3,11 @@
 ## -------------------------------------------------------------------------------------------------------------------
 ## Data Sources
 ## -------------------------------------------------------------------------------------------------------------------
-
 data "aws_region" "current" {}
 
 ## -------------------------------------------------------------------------------------------------------------------
 ## ECS Cluster
 ## -------------------------------------------------------------------------------------------------------------------
-
 resource "aws_ecs_cluster" "main" {
   name = "${var.resources_prefix_name}-cluster"
 
@@ -26,7 +24,6 @@ resource "aws_ecs_cluster" "main" {
 ## -------------------------------------------------------------------------------------------------------------------
 ## ECS Capacity Provider
 ## -------------------------------------------------------------------------------------------------------------------
-
 resource "aws_ecs_capacity_provider" "main" {
   name = "${var.resources_prefix_name}-capacity-provider"
 
@@ -57,6 +54,50 @@ resource "aws_ecs_cluster_capacity_providers" "main" {
 }
 
 ## -------------------------------------------------------------------------------------------------------------------
+## IAM Role for ECS Task
+## -------------------------------------------------------------------------------------------------------------------
+resource "aws_iam_role" "task_role" {
+  name = "${var.resources_prefix_name}-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.resources_prefix_name}-task-role"
+  }
+}
+
+resource "aws_iam_policy" "deny_all" {
+  name = "${var.resources_prefix_name}-deny-all-policy"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Deny"
+        Action = "*"
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "task_deny_all" {
+  role       = aws_iam_role.task_role.name
+  policy_arn = aws_iam_policy.deny_all.arn
+}
+
+## -------------------------------------------------------------------------------------------------------------------
 ## Task Definition
 ## -------------------------------------------------------------------------------------------------------------------
 resource "aws_ecs_task_definition" "main" {
@@ -68,6 +109,7 @@ resource "aws_ecs_task_definition" "main" {
 
   network_mode             = "host"
   requires_compatibilities = ["EC2"]
+  task_role_arn            = aws_iam_role.task_role.arn
 
   container_definitions = jsonencode([
     {
