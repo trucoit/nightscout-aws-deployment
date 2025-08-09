@@ -111,13 +111,28 @@ resource "aws_ecs_task_definition" "main" {
   requires_compatibilities = ["EC2"]
   task_role_arn            = aws_iam_role.task_role.arn
 
+  volume {
+    name = "efs-volume"
+    efs_volume_configuration {
+      file_system_id = var.efs_file_system_id
+      root_directory = "/"
+    }
+  }
+
   container_definitions = jsonencode([
     {
       name             = var.container_name
       image            = var.container_image
       essential        = true
+      cpu              = 1024
       memoryReservation = 1024
-      memoryReservation = 1024
+      mountPoints = [
+        {
+          sourceVolume  = "efs-volume"
+          containerPath = "/data"
+          readOnly      = false
+        }
+      ]
       portMappings = [
         {
           containerPort = var.container_port

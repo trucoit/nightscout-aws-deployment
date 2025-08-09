@@ -21,6 +21,18 @@ resource "aws_cloudwatch_log_group" "main" {
 
 
 ## -------------------------------------------------------------------------------------------------------------------
+## Storage Module
+## -------------------------------------------------------------------------------------------------------------------
+module "storage" {
+  source = "../storage"
+
+  resources_prefix_name   = var.resources_prefix_name
+  vpc_id                  = var.vpc_id
+  subnet_ids              = var.public_subnet_ids
+  ec2_security_group_id   = module.ec2.security_group_id
+}
+
+## -------------------------------------------------------------------------------------------------------------------
 ## ECS Module
 ## -------------------------------------------------------------------------------------------------------------------
 module "ecs" {
@@ -29,6 +41,7 @@ module "ecs" {
   resources_prefix_name = var.resources_prefix_name
   log_group_name        = aws_cloudwatch_log_group.main.name
   autoscaling_group_arn = module.ec2.autoscaling_group_arn
+  efs_file_system_id    = module.storage.efs_file_system_id
 
 
   # task_cpu              = var.task_cpu
