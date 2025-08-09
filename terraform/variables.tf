@@ -1,17 +1,34 @@
 # Variables for Nightscout AWS Deployment
 
-# AWS Configuration
+## -------------------------------------------------------------------------------------------------------------------
+## MAIN SETUP
+## -------------------------------------------------------------------------------------------------------------------
 variable "aws_region" {
   description = "AWS region for all resources"
   type        = string
   default     = "us-east-1"
 }
 
-# Networking Module Variables
 variable "resources_prefix_name" {
   description = "Prefix name for all the auto generated resources"
   type        = string
   default     = "nightscout-aws"
+}
+
+
+## -------------------------------------------------------------------------------------------------------------------
+## Networking Module Variables
+## -------------------------------------------------------------------------------------------------------------------
+variable "enable_private_subnets" {
+  description = "Enable private subnets and associated resources"
+  type        = bool
+  default     = false
+}
+
+variable "enable_flow_logs" {
+  description = "Enable VPC Flow Logs"
+  type        = bool
+  default     = false
 }
 
 variable "retention_in_days" {
@@ -32,16 +49,4 @@ variable "traffic_type" {
     condition     = contains(["ACCEPT", "REJECT", "ALL"], var.traffic_type)
     error_message = "TrafficType must be one of: ACCEPT, REJECT, ALL."
   }
-}
-
-variable "enable_flow_logs" {
-  description = "Enable VPC Flow Logs"
-  type        = bool
-  default     = false
-}
-
-variable "enable_private_subnets" {
-  description = "Enable private subnets and associated resources"
-  type        = bool
-  default     = false
 }
