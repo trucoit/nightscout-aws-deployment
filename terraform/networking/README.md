@@ -6,12 +6,17 @@ This Terraform module creates a VPC with public and private subnets.
 
 The module creates:
 - 1 VPC with CIDR block 10.0.0.0/16
-- 3 Public subnets (10.0.1.0/24, 10.0.2.0/24, 10.0.3.0/24) across 3 availability zones
-- 3 Private subnets (10.0.4.0/24, 10.0.5.0/24, 10.0.6.0/24) - optional
+- Public subnets across all available availability zones in the region (automatically calculated CIDR blocks)
+- Private subnets across all available availability zones in the region - optional (automatically calculated CIDR blocks)
 - Internet Gateway for public subnet internet access
 - NAT Gateway for private subnet internet access - optional
 - Route tables and associations
 - VPC Flow Logs with CloudWatch integration - optional
+
+**Note**: The number of subnets created depends on the number of availability zones in your AWS region. For example:
+- us-east-1 (6 AZs): 6 public + 6 private subnets (if enabled)
+- us-west-2 (4 AZs): 4 public + 4 private subnets (if enabled)
+- ap-south-1 (3 AZs): 3 public + 3 private subnets (if enabled)
 
 ## Files
 
@@ -66,12 +71,8 @@ The module creates:
 | Output | Description |
 |--------|-------------|
 | `pub_private_vpc_id` | VPC ID |
-| `public_subnet_1_id` | Public Subnet A ID |
-| `public_subnet_2_id` | Public Subnet B ID |
-| `public_subnet_3_id` | Public Subnet C ID |
-| `private_subnet_1_id` | Private Subnet A ID (if enabled) |
-| `private_subnet_2_id` | Private Subnet B ID (if enabled) |
-| `private_subnet_3_id` | Private Subnet C ID (if enabled) |
+| `public_subnet_ids_by_az` | Map of public subnet IDs by availability zone |
+| `private_subnet_ids_by_az` | Map of private subnet IDs by availability zone (if enabled) |
 | `public_subnet_ids` | List of all public subnet IDs |
 | `private_subnet_ids` | List of all private subnet IDs (if enabled) |
 | `internet_gateway_id` | Internet Gateway ID |
@@ -94,6 +95,15 @@ enable_private_subnets = true
 enable_flow_logs = true
 traffic_type = "ALL"
 retention_in_days = 30
+```
+
+### Accessing specific subnet by AZ:
+```hcl
+# Reference a specific subnet by availability zone
+subnet_id = module.networking.public_subnet_ids_by_az["us-west-2a"]
+
+# Or get all subnet IDs as a list
+all_public_subnets = module.networking.public_subnet_ids
 ```
 
 ## Cost Considerations

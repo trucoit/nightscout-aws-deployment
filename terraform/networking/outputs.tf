@@ -5,34 +5,14 @@ output "pub_private_vpc_id" {
   value       = aws_vpc.pub_private_vpc.id
 }
 
-output "private_subnet_1_id" {
-  description = "Private Subnet A ID"
-  value       = var.enable_private_subnets ? aws_subnet.private_subnet_1[0].id : null
+output "private_subnet_ids_by_az" {
+  description = "Map of private subnet IDs by availability zone"
+  value       = { for k, v in aws_subnet.private_subnets : k => v.id }
 }
 
-output "private_subnet_2_id" {
-  description = "Private Subnet B ID"
-  value       = var.enable_private_subnets ? aws_subnet.private_subnet_2[0].id : null
-}
-
-output "private_subnet_3_id" {
-  description = "Private Subnet C ID"
-  value       = var.enable_private_subnets ? aws_subnet.private_subnet_3[0].id : null
-}
-
-output "public_subnet_1_id" {
-  description = "Public Subnet A ID"
-  value       = aws_subnet.public_subnet_1.id
-}
-
-output "public_subnet_2_id" {
-  description = "Public Subnet B ID"
-  value       = aws_subnet.public_subnet_2.id
-}
-
-output "public_subnet_3_id" {
-  description = "Public Subnet C ID"
-  value       = aws_subnet.public_subnet_3.id
+output "public_subnet_ids_by_az" {
+  description = "Map of public subnet IDs by availability zone"
+  value       = { for k, v in aws_subnet.public_subnets : k => v.id }
 }
 
 output "log_group_arn" {
@@ -43,20 +23,12 @@ output "log_group_arn" {
 # Additional useful outputs
 output "private_subnet_ids" {
   description = "List of private subnet IDs"
-  value = var.enable_private_subnets ? [
-    aws_subnet.private_subnet_1[0].id,
-    aws_subnet.private_subnet_2[0].id,
-    aws_subnet.private_subnet_3[0].id
-  ] : []
+  value       = values(aws_subnet.private_subnets)[*].id
 }
 
 output "public_subnet_ids" {
   description = "List of public subnet IDs"
-  value = [
-    aws_subnet.public_subnet_1.id,
-    aws_subnet.public_subnet_2.id,
-    aws_subnet.public_subnet_3.id
-  ]
+  value       = values(aws_subnet.public_subnets)[*].id
 }
 
 output "internet_gateway_id" {

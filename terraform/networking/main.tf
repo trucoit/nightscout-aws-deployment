@@ -26,73 +26,30 @@ resource "aws_vpc" "pub_private_vpc" {
 }
 
 # Public Subnets
-resource "aws_subnet" "public_subnet_1" {
+resource "aws_subnet" "public_subnets" {
+  for_each = toset(data.aws_availability_zones.available.names)
+  
   vpc_id                  = aws_vpc.pub_private_vpc.id
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  cidr_block              = "10.0.1.0/24"
+  availability_zone       = each.value
+  cidr_block              = cidrsubnet("10.0.0.0/16", 8, index(data.aws_availability_zones.available.names, each.value) + 1)
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.resources_prefix_name}-public-subnet-A"
-  }
-}
-
-resource "aws_subnet" "public_subnet_2" {
-  vpc_id                  = aws_vpc.pub_private_vpc.id
-  availability_zone       = data.aws_availability_zones.available.names[1]
-  cidr_block              = "10.0.2.0/24"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "${var.resources_prefix_name}-public-subnet-B"
-  }
-}
-
-resource "aws_subnet" "public_subnet_3" {
-  vpc_id                  = aws_vpc.pub_private_vpc.id
-  availability_zone       = data.aws_availability_zones.available.names[2]
-  cidr_block              = "10.0.3.0/24"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "${var.resources_prefix_name}-public-subnet-C"
+    Name = "${var.resources_prefix_name}-public-subnet-${substr(each.value, -1, 1)}"
   }
 }
 
 # Private Subnets (conditional)
-resource "aws_subnet" "private_subnet_1" {
-  count                   = var.enable_private_subnets ? 1 : 0
+resource "aws_subnet" "private_subnets" {
+  for_each = var.enable_private_subnets ? toset(data.aws_availability_zones.available.names) : []
+  
   vpc_id                  = aws_vpc.pub_private_vpc.id
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  cidr_block              = "10.0.4.0/24"
+  availability_zone       = each.value
+  cidr_block              = cidrsubnet("10.0.0.0/16", 8, index(data.aws_availability_zones.available.names, each.value) + length(data.aws_availability_zones.available.names) + 1)
   map_public_ip_on_launch = false
 
   tags = {
-    Name = "${var.resources_prefix_name}-private-subnet-A"
-  }
-}
-
-resource "aws_subnet" "private_subnet_2" {
-  count                   = var.enable_private_subnets ? 1 : 0
-  vpc_id                  = aws_vpc.pub_private_vpc.id
-  availability_zone       = data.aws_availability_zones.available.names[1]
-  cidr_block              = "10.0.5.0/24"
-  map_public_ip_on_launch = false
-
-  tags = {
-    Name = "${var.resources_prefix_name}-private-subnet-B"
-  }
-}
-
-resource "aws_subnet" "private_subnet_3" {
-  count                   = var.enable_private_subnets ? 1 : 0
-  vpc_id                  = aws_vpc.pub_private_vpc.id
-  availability_zone       = data.aws_availability_zones.available.names[2]
-  cidr_block              = "10.0.6.0/24"
-  map_public_ip_on_launch = false
-
-  tags = {
-    Name = "${var.resources_prefix_name}-private-subnet-C"
+    Name = "${var.resources_prefix_name}-private-subnet-${substr(each.value, -1, 1)}"
   }
 }
 
@@ -122,18 +79,10 @@ resource "aws_route" "public_route" {
 }
 
 # Public Subnet Route Table Associations
-resource "aws_route_table_association" "public_subnet_1_route_table_association" {
-  subnet_id      = aws_subnet.public_subnet_1.id
-  route_table_id = aws_route_table.public_route_table.id
-}
-
-resource "aws_route_table_association" "public_subnet_2_route_table_association" {
-  subnet_id      = aws_subnet.public_subnet_2.id
-  route_table_id = aws_route_table.public_route_table.id
-}
-
-resource "aws_route_table_association" "public_subnet_3_route_table_association" {
-  subnet_id      = aws_subnet.public_subnet_3.id
+resource "aws_route_table_association" "public_subnet_route_table_associations" {
+  for_each = aws_subnet.public_subnets
+  
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.public_route_table.id
 }
 
@@ -149,7 +98,7 @@ resource "aws_eip" "nat_public_ip" {
 resource "aws_nat_gateway" "nat_gateway" {
   count         = var.enable_private_subnets ? 1 : 0
   allocation_id = aws_eip.nat_public_ip[0].id
-  subnet_id     = aws_subnet.public_subnet_1.id
+  subnet_id     = values(aws_subnet.public_subnets)[0].id
 
   tags = {
     Name = "${var.resources_prefix_name}-NatGateway"
@@ -175,21 +124,10 @@ resource "aws_route" "private_route" {
 }
 
 # Private Subnet Route Table Associations (conditional)
-resource "aws_route_table_association" "private_subnet_1_route_table_association" {
-  count          = var.enable_private_subnets ? 1 : 0
-  subnet_id      = aws_subnet.private_subnet_1[0].id
-  route_table_id = aws_route_table.private_route_table[0].id
-}
-
-resource "aws_route_table_association" "private_subnet_2_route_table_association" {
-  count          = var.enable_private_subnets ? 1 : 0
-  subnet_id      = aws_subnet.private_subnet_2[0].id
-  route_table_id = aws_route_table.private_route_table[0].id
-}
-
-resource "aws_route_table_association" "private_subnet_3_route_table_association" {
-  count          = var.enable_private_subnets ? 1 : 0
-  subnet_id      = aws_subnet.private_subnet_3[0].id
+resource "aws_route_table_association" "private_subnet_route_table_associations" {
+  for_each = aws_subnet.private_subnets
+  
+  subnet_id      = each.value.id
   route_table_id = aws_route_table.private_route_table[0].id
 }
 

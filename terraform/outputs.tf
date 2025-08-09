@@ -27,34 +27,14 @@ output "private_subnet_ids" {
   value       = module.networking.private_subnet_ids
 }
 
-output "public_subnet_1_id" {
-  description = "Public Subnet A ID"
-  value       = module.networking.public_subnet_1_id
+output "public_subnet_ids_by_az" {
+  description = "Map of public subnet IDs by availability zone"
+  value       = module.networking.public_subnet_ids_by_az
 }
 
-output "public_subnet_2_id" {
-  description = "Public Subnet B ID"
-  value       = module.networking.public_subnet_2_id
-}
-
-output "public_subnet_3_id" {
-  description = "Public Subnet C ID"
-  value       = module.networking.public_subnet_3_id
-}
-
-output "private_subnet_1_id" {
-  description = "Private Subnet A ID"
-  value       = module.networking.private_subnet_1_id
-}
-
-output "private_subnet_2_id" {
-  description = "Private Subnet B ID"
-  value       = module.networking.private_subnet_2_id
-}
-
-output "private_subnet_3_id" {
-  description = "Private Subnet C ID"
-  value       = module.networking.private_subnet_3_id
+output "private_subnet_ids_by_az" {
+  description = "Map of private subnet IDs by availability zone"
+  value       = module.networking.private_subnet_ids_by_az
 }
 
 output "internet_gateway_id" {
