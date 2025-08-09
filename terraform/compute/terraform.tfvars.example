@@ -1,0 +1,42 @@
+# Example Terraform variables for Compute module
+
+# ECS Configuration
+target_capacity       = 100
+service_desired_count = 1
+task_cpu             = 512
+task_memory          = 1024
+
+# Container Configuration
+container_name  = "nightscout"
+container_image = "nightscout/cgm-remote-monitor:latest"
+container_port  = 1337
+
+# Container Environment Variables
+container_environment = [
+  {
+    name  = "MONGO_CONNECTION"
+    value = "mongodb://your-mongo-connection-string"
+  },
+  {
+    name  = "BASE_URL"
+    value = "https://your-domain.com"
+  }
+]
+
+# Auto Scaling Group Configuration
+asg_min_size         = 1
+asg_max_size         = 2
+asg_desired_capacity = 1
+
+# Instance Types (prioritized by cost, 2-4GB RAM)
+instance_types = [
+  "t3.small",
+  "t3a.small",
+  "t2.small",
+  "t3.medium",
+  "t3a.medium",
+  "t2.medium"
+]
+
+# Logging
+log_retention_days = 7

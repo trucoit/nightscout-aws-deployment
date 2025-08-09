@@ -49,11 +49,22 @@ module "networking" {
 ## -------------------------------------------------------------------------------------------------------------------
 ## Define Compute resources and configuration
 ## -------------------------------------------------------------------------------------------------------------------
-# TBD
+module "compute" {
+  source = "./compute"
+
+  # Pass networking outputs
+  vpc_id            = module.networking.pub_private_vpc_id
+  public_subnet_ids = module.networking.public_subnet_ids
+
+  # Pass common variables
+  resources_prefix_name = var.resources_prefix_name
+
+  # Compute-specific variables can be overridden via terraform.tfvars
+}
 
 ## -------------------------------------------------------------------------------------------------------------------
 ## Storage
 ## -------------------------------------------------------------------------------------------------------------------
 ## Define Storage resources and configuration
 ## -------------------------------------------------------------------------------------------------------------------
-# TBD
+# TBD
