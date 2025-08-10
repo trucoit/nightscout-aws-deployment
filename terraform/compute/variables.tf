@@ -96,7 +96,7 @@ variable "instance_types" {
 variable "log_retention_days" {
   description = "CloudWatch log retention in days"
   type        = number
-  default     = 30
+  default     = 14
 }
 
 variable "cloudfront_distribution_id" {

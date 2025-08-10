@@ -47,19 +47,6 @@ data "archive_file" "cloudfront_update_lambda_zip" {
 
 
 ## -------------------------------------------------------------------------------------------------------------------
-## CloudFront Update Lambda CloudWatch Log Group
-## -------------------------------------------------------------------------------------------------------------------
-resource "aws_cloudwatch_log_group" "cloudfront_update_lambda" {
-  name              = "${var.log_group_name}/lambda/cloudfront-update"
-  retention_in_days = 30
-
-  tags = {
-    Name = "${var.resources_prefix_name}-cloudfront-update-logs"
-  }
-}
-
-
-## -------------------------------------------------------------------------------------------------------------------
 ## CloudFront Update Lambda IAM Role
 ## -------------------------------------------------------------------------------------------------------------------
 resource "aws_iam_role" "cloudfront_update_lambda" {
@@ -101,7 +88,7 @@ resource "aws_iam_role_policy" "cloudfront_update_lambda" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:*"
+        Resource = "arn:aws:logs:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:log-group:${var.log_group_name}:*"
       },
       {
         Effect = "Allow"
@@ -136,6 +123,11 @@ resource "aws_lambda_function" "cloudfront_update" {
   timeout         = 600
   source_code_hash = data.archive_file.cloudfront_update_lambda_zip.output_base64sha256
 
+  logging_config {
+    log_group  = var.log_group_name
+    log_format = "Text"
+  }
+
   environment {
     variables = {
       CLOUDFRONT_DISTRIBUTION_ID = var.cloudfront_distribution_id
@@ -148,7 +140,6 @@ resource "aws_lambda_function" "cloudfront_update" {
 
   depends_on = [
     aws_iam_role_policy.cloudfront_update_lambda,
-    aws_cloudwatch_log_group.cloudfront_update_lambda,
   ]
 
   tags = {
