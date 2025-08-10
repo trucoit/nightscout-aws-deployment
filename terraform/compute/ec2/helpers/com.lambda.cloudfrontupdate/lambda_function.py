@@ -155,6 +155,10 @@ def update_cloudfront_origins(distribution_id: str, instance_data: Dict[str, str
         vpc_origin_id = os.environ['VPC_ORIGIN_ID']
         cf_origin_id = os.environ['CF_ORIGIN_ID']
         
+        # Get current VPC origin config for ETag
+        vpc_origin_response = cloudfront.get_vpc_origin(Id=vpc_origin_id)
+        vpc_origin_etag = vpc_origin_response['ETag']
+        
         # Update VPC origin ARN
         cloudfront.update_vpc_origin(
             Id=vpc_origin_id,
@@ -168,7 +172,8 @@ def update_cloudfront_origins(distribution_id: str, instance_data: Dict[str, str
                     'Items': ['TLSv1.2'],
                     'Quantity': 1
                 }
-            }
+            },
+            IfMatch=vpc_origin_etag
         )
         
         # Get current distribution config
