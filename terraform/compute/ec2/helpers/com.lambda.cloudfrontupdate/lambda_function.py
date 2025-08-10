@@ -152,18 +152,36 @@ def update_cloudfront_origins(distribution_id: str, instance_data: Dict[str, str
     """
     try:
         # Get environment variables for origin IDs
-        vpc_origin_id = os.environ['VPC_ORIGIN_ID']
+        vpc_origin_alpha_id = os.environ['VPC_ORIGIN_ID_ALPHA']
+        vpc_origin_bravo_id = os.environ['VPC_ORIGIN_ID_BRAVO']
         cf_origin_id = os.environ['CF_ORIGIN_ID']
         
-        # Get current VPC origin config for ETag
-        vpc_origin_response = cloudfront.get_vpc_origin(Id=vpc_origin_id)
+        # Get current distribution config to check which VPC origin is in use
+        response = cloudfront.get_distribution_config(Id=distribution_id)
+        config = response['DistributionConfig'].copy()
+        etag = response['ETag']
+        
+        # Find current VPC origin in use
+        current_vpc_origin_id = None
+        for origin in config['Origins']['Items']:
+            if origin['Id'] == cf_origin_id:
+                current_vpc_origin_id = origin['VpcOriginConfig']['VpcOriginId']
+                break
+        
+        # Determine which VPC origin to update (the one not in use)
+        target_vpc_origin_id = vpc_origin_bravo_id if current_vpc_origin_id == vpc_origin_alpha_id else vpc_origin_alpha_id
+        
+        logger.info(f"Current VPC origin: {current_vpc_origin_id}, updating: {target_vpc_origin_id}")
+        
+        # Get target VPC origin config for ETag
+        vpc_origin_response = cloudfront.get_vpc_origin(Id=target_vpc_origin_id)
         vpc_origin_etag = vpc_origin_response['ETag']
         
-        # Update VPC origin ARN
+        # Update the target VPC origin with new instance data
         cloudfront.update_vpc_origin(
-            Id=vpc_origin_id,
+            Id=target_vpc_origin_id,
             VpcOriginEndpointConfig={
-                'Name': f"{os.environ.get('RESOURCES_PREFIX', 'nightscout')}-vpc-origin",
+                'Name': f"{os.environ.get('RESOURCES_PREFIX', 'nightscout')}-vpc-origin-{'bravo' if target_vpc_origin_id == vpc_origin_bravo_id else 'alpha'}",
                 'Arn': instance_data['instance_arn'],
                 'HTTPPort': int(container_port),
                 'HTTPSPort': 443,
@@ -176,20 +194,13 @@ def update_cloudfront_origins(distribution_id: str, instance_data: Dict[str, str
             IfMatch=vpc_origin_etag
         )
         
-        # Get current distribution config
-        response = cloudfront.get_distribution_config(Id=distribution_id)
-        config = response['DistributionConfig'].copy()
-        etag = response['ETag']
-        
-        # Update the origin domain name
-        origins = config['Origins']['Items']
-        for origin in origins:
+        # Update CloudFront origin to point to the newly updated VPC origin
+        for origin in config['Origins']['Items']:
             if origin['Id'] == cf_origin_id:
                 origin['DomainName'] = instance_data['private_dns']
-                logger.info(f"Updated origin {cf_origin_id} with DNS: {instance_data['private_dns']}")
+                origin['VpcOriginConfig']['VpcOriginId'] = target_vpc_origin_id
+                logger.info(f"Swapped CloudFront origin to use VPC origin: {target_vpc_origin_id}")
                 break
-        
-        config['Origins']['Items'] = origins
         
         # Update distribution
         cloudfront.update_distribution(
@@ -198,7 +209,7 @@ def update_cloudfront_origins(distribution_id: str, instance_data: Dict[str, str
             IfMatch=etag
         )
         
-        logger.info(f"Successfully updated CloudFront distribution {distribution_id} and VPC origin {vpc_origin_id}")
+        logger.info(f"Successfully updated CloudFront distribution {distribution_id} and VPC origin {target_vpc_origin_id}")
         
     except Exception as e:
         logger.error(f"Error updating CloudFront distribution: {str(e)}")

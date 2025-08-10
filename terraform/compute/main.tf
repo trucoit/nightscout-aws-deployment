@@ -85,6 +85,7 @@ module "ec2_helpers" {
   autoscaling_group_name      = module.ec2.autoscaling_group_name
   cloudfront_distribution_id  = var.cloudfront_distribution_id
   container_port              = var.container_port
-  vpc_origin_id     = var.vpc_origin_id
-  cf_origin_id      = var.cf_origin_id
+  vpc_origin_id_alpha = var.vpc_origin_id
+  vpc_origin_id_bravo = var.vpc_origin_bravo_id
+  cf_origin_id        = var.cf_origin_id
 }
