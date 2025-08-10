@@ -43,7 +43,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         container_port = os.environ['CONTAINER_PORT']
         
         # Get current running instances in the ASG
-        running_instances = get_asg_running_instances(asg_name)
+        running_instances = get_asg_running_instances(asg_name, context)
         logger.info(f"Found Running instance: {running_instances}")
         
         # Update CloudFront distribution
@@ -66,7 +66,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             })
         }
 
-def get_asg_running_instances(asg_name: str) -> List[str]:
+def get_asg_running_instances(asg_name: str, context) -> List[str]:
     """
     Get list of running instance IPs from Auto Scaling Group.
     
@@ -131,7 +131,7 @@ def get_asg_running_instances(asg_name: str) -> List[str]:
         latest_instance = max(running_instances, key=lambda x: x['LaunchTime'])
         
         private_dns = latest_instance.get('PrivateDnsName')
-        instance_arn = f"arn:aws:ec2:{latest_instance['Placement']['AvailabilityZone'][:-1]}:{latest_instance.get('OwnerId', '')}:instance/{latest_instance['InstanceId']}"
+        instance_arn = f"arn:aws:ec2:{latest_instance['Placement']['AvailabilityZone'][:-1]}:{context.invoked_function_arn.split(':')[4]}:instance/{latest_instance['InstanceId']}"
         
         logger.info(f"Found latest running instance {latest_instance['InstanceId']} with DNS {private_dns}")
         
@@ -165,6 +165,7 @@ def update_cloudfront_origins(distribution_id: str, instance_data: Dict[str, str
         current_vpc_origin_id = None
         for origin in config['Origins']['Items']:
             if origin['Id'] == cf_origin_id:
+                print(f"Found CF origin: {origin}")
                 current_vpc_origin_id = origin['VpcOriginConfig']['VpcOriginId']
                 break
         
@@ -174,25 +175,65 @@ def update_cloudfront_origins(distribution_id: str, instance_data: Dict[str, str
         logger.info(f"Current VPC origin: {current_vpc_origin_id}, updating: {target_vpc_origin_id}")
         
         # Get target VPC origin config for ETag
-        vpc_origin_response = cloudfront.get_vpc_origin(Id=target_vpc_origin_id)
-        vpc_origin_etag = vpc_origin_response['ETag']
+        logger.info(f"Getting VPC origin config for ID: {target_vpc_origin_id}")
+        try:
+            vpc_origin_response = cloudfront.get_vpc_origin(Id=target_vpc_origin_id)
+            vpc_origin_etag = vpc_origin_response['ETag']
+            logger.info(f"VPC origin current config: {json.dumps(vpc_origin_response['VpcOrigin'], default=str)}")
+            logger.info(f"VPC origin ETag: {vpc_origin_etag}")
+        except Exception as e:
+            logger.error(f"Failed to get VPC origin {target_vpc_origin_id}: {str(e)}")
+            raise
+        
+        # Prepare update parameters
+        update_config = {
+            'Name': f"{os.environ.get('RESOURCES_PREFIX', 'nightscout')}-vpc-origin-{'bravo' if target_vpc_origin_id == vpc_origin_bravo_id else 'alpha'}",
+            'Arn': instance_data['instance_arn'],
+            'HTTPPort': int(container_port),
+            'HTTPSPort': 443,
+            'OriginProtocolPolicy': 'http-only',
+            'OriginSslProtocols': {
+                'Items': ['TLSv1.2'],
+                'Quantity': 1
+            }
+        }
+        
+        logger.info(f"Updating VPC origin {target_vpc_origin_id} with config: {json.dumps(update_config, default=str)}")
+        logger.info(f"Using ETag: {vpc_origin_etag}")
         
         # Update the target VPC origin with new instance data
-        cloudfront.update_vpc_origin(
-            Id=target_vpc_origin_id,
-            VpcOriginEndpointConfig={
-                'Name': f"{os.environ.get('RESOURCES_PREFIX', 'nightscout')}-vpc-origin-{'bravo' if target_vpc_origin_id == vpc_origin_bravo_id else 'alpha'}",
-                'Arn': instance_data['instance_arn'],
-                'HTTPPort': int(container_port),
-                'HTTPSPort': 443,
-                'OriginProtocolPolicy': 'http-only',
-                'OriginSslProtocols': {
-                    'Items': ['TLSv1.2'],
-                    'Quantity': 1
-                }
-            },
-            IfMatch=vpc_origin_etag
-        )
+        try:
+            cloudfront.update_vpc_origin(
+                Id=target_vpc_origin_id,
+                VpcOriginEndpointConfig=update_config,
+                #IfMatch=vpc_origin_etag
+            )
+            logger.info(f"Successfully called update_vpc_origin for {target_vpc_origin_id}")
+        except Exception as e:
+            logger.error(f"Failed to update VPC origin {target_vpc_origin_id}: {str(e)}")
+            logger.error(f"Error type: {type(e).__name__}")
+            if hasattr(e, 'response'):
+                logger.error(f"AWS Error Response: {json.dumps(e.response, default=str)}")
+            raise
+        
+        # Wait for VPC origin update to complete with exponential backoff
+        max_retries = 200
+        base_delay = 2
+        for attempt in range(max_retries):
+            try:
+                vpc_status = cloudfront.get_vpc_origin(Id=target_vpc_origin_id)
+                if vpc_status['VpcOrigin']['Status'] == 'Deployed':
+                    logger.info(f"VPC origin {target_vpc_origin_id} successfully updated")
+                    break
+            except Exception as e:
+                logger.warning(f"Error checking VPC origin status: {str(e)}")
+            
+            if attempt < max_retries - 1:
+                delay = base_delay ** (attempt + 1)
+                logger.info(f"VPC origin still updating, retrying in {delay}s (attempt {attempt + 1}/{max_retries})")
+                time.sleep(delay)
+        else:
+            logger.warning(f"VPC origin {target_vpc_origin_id} may not be fully deployed yet, proceeding anyway")
         
         # Update CloudFront origin to point to the newly updated VPC origin
         for origin in config['Origins']['Items']:

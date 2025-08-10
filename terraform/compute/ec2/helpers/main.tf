@@ -93,11 +93,9 @@ resource "aws_iam_role_policy" "cloudfront_update_lambda" {
       {
         Effect = "Allow"
         Action = [
-          "cloudfront:GetDistribution",
-          "cloudfront:GetDistributionConfig",
-          "cloudfront:UpdateDistribution"
+          "cloudfront:*",
         ]
-        Resource = "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/${var.cloudfront_distribution_id}"
+        Resource = "*"
       },
       {
         Effect = "Allow"
