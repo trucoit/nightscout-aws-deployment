@@ -6,7 +6,7 @@ echo ECS_ENABLE_CONTAINER_METADATA=true >> /etc/ecs/ecs.config
 
 # Install and configure CloudWatch agent
 yum update -y
-yum install -y amazon-cloudwatch-agent
+yum install -y amazon-cloudwatch-agent amazon-efs-utils
 
 # Create CloudWatch agent config
 cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << EOF

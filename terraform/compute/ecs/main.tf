@@ -4,6 +4,7 @@
 ## Data Sources
 ## -------------------------------------------------------------------------------------------------------------------
 data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
 
 ## -------------------------------------------------------------------------------------------------------------------
 ## ECS Cluster
@@ -30,6 +31,7 @@ resource "aws_ecs_capacity_provider" "main" {
   auto_scaling_group_provider {
     auto_scaling_group_arn         = var.autoscaling_group_arn
     managed_termination_protection = "ENABLED"
+    managed_draining               = "ENABLED"
 
     managed_scaling {
       status          = "ENABLED"
@@ -110,6 +112,7 @@ resource "aws_ecs_task_definition" "main" {
   network_mode             = "host"
   requires_compatibilities = ["EC2"]
   task_role_arn            = aws_iam_role.task_role.arn
+  execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
 
   volume {
     name = "efs-volume"
@@ -165,6 +168,13 @@ resource "aws_ecs_service" "main" {
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.main.arn
   desired_count   = var.service_desired_count
+
+  # We can't ever allow 2 Tasks to run at the same time, as we are running the Database container
+  # - Managed draining is enabled in for the Capacity Provider
+  # - When ECS Instance receives SPOT termination notice, it will send the SIGTERM signal to all the containers
+  # - https://docs.aws.amazon.com/AmazonECS/latest/developerguide/container-instance-draining.html
+  deployment_minimum_healthy_percent = 0
+  deployment_maximum_percent = 100
 
   capacity_provider_strategy {
     capacity_provider = aws_ecs_capacity_provider.main.name
