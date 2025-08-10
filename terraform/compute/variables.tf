@@ -98,3 +98,26 @@ variable "log_retention_days" {
   type        = number
   default     = 30
 }
+
+variable "cloudfront_distribution_id" {
+  description = "CloudFront Distribution ID"
+  type        = string
+}
+
+variable "asg_min_size" {
+  description = "Minimum size of the Auto Scaling Group"
+  type        = number
+  default     = 1
+}
+
+variable "asg_max_size" {
+  description = "Maximum size of the Auto Scaling Group"
+  type        = number
+  default     = 1
+}
+
+variable "asg_desired_capacity" {
+  description = "Desired capacity of the Auto Scaling Group"
+  type        = number
+  default     = 1
+}

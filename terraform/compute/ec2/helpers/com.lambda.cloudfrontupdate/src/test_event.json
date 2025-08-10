@@ -1,0 +1,9 @@
+{
+  "Records": [
+    {
+      "Sns": {
+        "Message": "{\"AutoScalingGroupName\":\"nightscout-aws-asg\",\"Event\":\"autoscaling:EC2_INSTANCE_LAUNCH\",\"EC2InstanceId\":\"i-1234567890abcdef0\",\"StatusCode\":\"InProgress\",\"StatusMessage\":\"Instance is launching\",\"Details\":{\"Availability Zone\":\"us-east-1a\",\"Subnet ID\":\"subnet-12345678\"}}"
+      }
+    }
+  ]
+}

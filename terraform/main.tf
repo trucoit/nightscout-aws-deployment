@@ -58,8 +58,24 @@ module "compute" {
 
   # Pass common variables
   resources_prefix_name = var.resources_prefix_name
+  container_port       = var.container_port
+
+  # Pass routing outputs
+  cloudfront_distribution_id = module.routing.cloudfront_distribution_id
 
   # Compute-specific variables can be overridden via terraform.tfvars
+}
+
+## -------------------------------------------------------------------------------------------------------------------
+## Routing
+## -------------------------------------------------------------------------------------------------------------------
+## Define CloudFront distribution and routing configuration
+## -------------------------------------------------------------------------------------------------------------------
+module "routing" {
+  source = "./routing"
+
+  resources_prefix_name = var.resources_prefix_name
+  container_port       = var.container_port
 }
 
 ## -------------------------------------------------------------------------------------------------------------------

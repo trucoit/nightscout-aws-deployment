@@ -50,3 +50,12 @@ variable "traffic_type" {
     error_message = "TrafficType must be one of: ACCEPT, REJECT, ALL."
   }
 }
+
+## -------------------------------------------------------------------------------------------------------------------
+## Compute Module Variables
+## -------------------------------------------------------------------------------------------------------------------
+variable "container_port" {
+  description = "Port exposed by the container"
+  type        = number
+  default     = 80
+}

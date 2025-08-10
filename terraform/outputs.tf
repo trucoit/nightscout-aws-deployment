@@ -51,3 +51,20 @@ output "log_group_arn" {
   description = "The ARN of the CloudWatch Logs log group where the flow logs will be published."
   value       = module.networking.log_group_arn
 }
+
+# Routing Module Outputs
+output "cloudfront_distribution_id" {
+  description = "CloudFront Distribution ID"
+  value       = module.routing.cloudfront_distribution_id
+}
+
+output "cloudfront_domain_name" {
+  description = "CloudFront Distribution domain name"
+  value       = module.routing.cloudfront_domain_name
+}
+
+# Compute Module Outputs
+output "autoscaling_group_name" {
+  description = "Auto Scaling Group name"
+  value       = module.compute.autoscaling_group_name
+}
