@@ -118,16 +118,24 @@ def get_asg_running_instances(asg_name: str) -> List[str]:
         # Get instance details
         ec2_response = ec2.describe_instances(InstanceIds=instance_ids)
         
-        running_ips = []
+        running_instances = []
         for reservation in ec2_response['Reservations']:
             for instance in reservation['Instances']:
                 if instance['State']['Name'] == 'running':
-                    private_ip = instance.get('PrivateIpAddress')
-                    if private_ip:
-                        running_ips.append(private_ip)
-                        logger.info(f"Found running instance {instance['InstanceId']} with IP {private_ip}")
+                    running_instances.append(instance)
         
-        return running_ips
+        if not running_instances:
+            return []
+        
+        # Get the most recently launched running instance
+        latest_instance = max(running_instances, key=lambda x: x['LaunchTime'])
+        
+        private_dns = latest_instance.get('PrivateDnsName')
+        instance_arn = f"arn:aws:ec2:{latest_instance['Placement']['AvailabilityZone'][:-1]}:{latest_instance.get('OwnerId', '')}:instance/{latest_instance['InstanceId']}"
+        
+        logger.info(f"Found latest running instance {latest_instance['InstanceId']} with DNS {private_dns}")
+        
+        return {'private_dns': private_dns, 'instance_arn': instance_arn}
         
     except Exception as e:
         logger.error(f"Error getting ASG instances: {str(e)}")
