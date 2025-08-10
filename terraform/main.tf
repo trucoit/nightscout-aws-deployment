@@ -62,8 +62,10 @@ module "compute" {
 
   # Pass routing outputs
   cloudfront_distribution_id = module.routing.cloudfront_distribution_id
-  vpc_origin_alpha_id       = module.routing.vpc_origin_alpha_id
-  cf_origin_alpha_id        = module.routing.cf_origin_alpha_id
+  vpc_origin_id             = module.routing.vpc_origin_alpha_id
+  cf_origin_id              = module.routing.cf_origin_id
+  vpc_origin_bravo_id       = module.routing.vpc_origin_bravo_id
+  cf_origin_bravo_id        = module.routing.cf_origin_id
 
   # Compute-specific variables can be overridden via terraform.tfvars
 }

@@ -87,26 +87,17 @@ resource "aws_cloudfront_distribution" "main" {
 
   origin {
     domain_name = data.aws_instance.ecs.private_dns
-    origin_id   = "${var.resources_prefix_name}-cf-origin-alpha"
+    origin_id   = "${var.resources_prefix_name}-cf-origin"
 
     vpc_origin_config {
       vpc_origin_id = aws_cloudfront_vpc_origin.cf_origin_alpha.id
     }
   }
 
-  origin {
-    domain_name = data.aws_instance.ecs.private_dns
-    origin_id   = "${var.resources_prefix_name}-cf-origin-bravo"
-
-    vpc_origin_config {
-      vpc_origin_id = aws_cloudfront_vpc_origin.cf_origin_bravo.id
-    }
-  }
-
   default_cache_behavior {
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "${var.resources_prefix_name}-cf-origin-alpha"
+    target_origin_id       = "${var.resources_prefix_name}-cf-origin"
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 

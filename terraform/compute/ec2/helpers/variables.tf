@@ -30,17 +30,12 @@ variable "vpc_origin_id_alpha" {
   type        = string
 }
 
-variable "cf_origin_id_alpha" {
-  description = "CloudFront Origin ID"
-  type        = string
-}
-
 variable "vpc_origin_id_bravo" {
   description = "CloudFront VPC Origin ID"
   type        = string
 }
 
-variable "cf_origin_id_bravo" {
+variable "cf_origin_id" {
   description = "CloudFront Origin ID"
   type        = string
 }

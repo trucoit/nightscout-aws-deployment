@@ -122,13 +122,13 @@ variable "asg_desired_capacity" {
   default     = 1
 }
 
-variable "vpc_origin_alpha_id" {
-  description = "CloudFront VPC Origin Alpha ID"
+variable "vpc_origin_id" {
+  description = "CloudFront VPC Origin ID"
   type        = string
 }
 
-variable "cf_origin_alpha_id" {
-  description = "CloudFront Origin Alpha ID"
+variable "cf_origin_id" {
+  description = "CloudFront Origin ID"
   type        = string
 }
 

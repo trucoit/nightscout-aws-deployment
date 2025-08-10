@@ -25,12 +25,7 @@ output "vpc_origin_bravo_id" {
   value       = aws_cloudfront_vpc_origin.cf_origin_bravo.id
 }
 
-output "cf_origin_alpha_id" {
-  description = "CloudFront Origin Alpha ID"
-  value       = "${var.resources_prefix_name}-cf-origin-alpha"
-}
-
-output "cf_origin_bravo_id" {
-  description = "CloudFront Origin Bravo ID"
-  value       = "${var.resources_prefix_name}-cf-origin-bravo"
+output "cf_origin_id" {
+  description = "CloudFront Origin ID"
+  value       = "${var.resources_prefix_name}-cf-origin"
 }
