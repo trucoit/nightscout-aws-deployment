@@ -25,29 +25,6 @@ The module creates:
 - `outputs.tf` - Output values
 - `terraform.tfvars.example` - Example variables file
 
-## Usage
-
-1. **Initialize Terraform:**
-   ```bash
-   terraform init
-   ```
-
-2. **Create variables file:**
-   ```bash
-   cp terraform.tfvars.example terraform.tfvars
-   # Edit terraform.tfvars with your desired values
-   ```
-
-3. **Plan the deployment:**
-   ```bash
-   terraform plan
-   ```
-
-4. **Apply the configuration:**
-   ```bash
-   terraform apply
-   ```
-
 ## Variables
 
 | Variable | Description | Type | Default | Required |
