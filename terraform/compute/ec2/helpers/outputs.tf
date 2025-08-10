@@ -7,5 +7,5 @@ output "sns_topic_arn" {
 
 output "lambda_function_arn" {
   description = "CloudFront Update Lambda Function ARN"
-  value       = module.cloudfront_update_lambda.lambda_function_arn
+  value       = aws_lambda_function.cloudfront_update.arn
 }
