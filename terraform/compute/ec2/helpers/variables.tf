@@ -25,12 +25,22 @@ variable "container_port" {
   type        = number
 }
 
-variable "vpc_origin_id" {
+variable "vpc_origin_id_alpha" {
   description = "CloudFront VPC Origin ID"
   type        = string
 }
 
-variable "cf_origin_id" {
+variable "cf_origin_id_alpha" {
+  description = "CloudFront Origin ID"
+  type        = string
+}
+
+variable "vpc_origin_id_bravo" {
+  description = "CloudFront VPC Origin ID"
+  type        = string
+}
+
+variable "cf_origin_id_bravo" {
   description = "CloudFront Origin ID"
   type        = string
 }

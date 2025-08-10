@@ -80,11 +80,11 @@ module "ec2" {
 module "ec2_helpers" {
   source = "./ec2/helpers"
 
-  resources_prefix_name      = var.resources_prefix_name
-  log_group_name            = aws_cloudwatch_log_group.main.name
-  autoscaling_group_name    = module.ec2.autoscaling_group_name
-  cloudfront_distribution_id = var.cloudfront_distribution_id
-  container_port            = var.container_port
-  vpc_origin_id             = var.vpc_origin_id
-  cf_origin_id              = var.cf_origin_id
+  resources_prefix_name       = var.resources_prefix_name
+  log_group_name              = aws_cloudwatch_log_group.main.name
+  autoscaling_group_name      = module.ec2.autoscaling_group_name
+  cloudfront_distribution_id  = var.cloudfront_distribution_id
+  container_port              = var.container_port
+  vpc_origin_id_alpha         = var.vpc_origin_alpha_id
+  cf_origin_id_alpha          = var.cf_origin_alpha_id
 }

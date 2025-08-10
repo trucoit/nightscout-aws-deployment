@@ -39,11 +39,26 @@ resource "aws_cloudfront_origin_access_control" "main" {
 
 
 ## -------------------------------------------------------------------------------------------------------------------
-## VPC Origin
+## VPC Origins
 ## -------------------------------------------------------------------------------------------------------------------
-resource "aws_cloudfront_vpc_origin" "cf_origin" {
+resource "aws_cloudfront_vpc_origin" "cf_origin_alpha" {
   vpc_origin_endpoint_config {
-    name                   = "${var.resources_prefix_name}-vpc-origin"
+    name                   = "${var.resources_prefix_name}-vpc-origin-alpha"
+    arn                    = "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/${data.aws_instances.ecs.ids[0]}"
+    http_port              = 80
+    https_port             = 443
+    origin_protocol_policy = "http-only"
+
+    origin_ssl_protocols {
+      items    = ["TLSv1.2"]
+      quantity = 1
+    }
+  }
+}
+
+resource "aws_cloudfront_vpc_origin" "cf_origin_bravo" {
+  vpc_origin_endpoint_config {
+    name                   = "${var.resources_prefix_name}-vpc-origin-bravo"
     arn                    = "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/${data.aws_instances.ecs.ids[0]}"
     http_port              = 80
     https_port             = 443
@@ -70,20 +85,28 @@ resource "aws_cloudfront_distribution" "main" {
   http_version        = "http2and3"
   price_class         = "PriceClass_100"
 
-  # Default placeholder origin - will be updated by Lambda
   origin {
     domain_name = data.aws_instance.ecs.private_dns
-    origin_id   = "${var.resources_prefix_name}-cf-origin"
+    origin_id   = "${var.resources_prefix_name}-cf-origin-alpha"
 
     vpc_origin_config {
-      vpc_origin_id = aws_cloudfront_vpc_origin.cf_origin.id
+      vpc_origin_id = aws_cloudfront_vpc_origin.cf_origin_alpha.id
+    }
+  }
+
+  origin {
+    domain_name = data.aws_instance.ecs.private_dns
+    origin_id   = "${var.resources_prefix_name}-cf-origin-bravo"
+
+    vpc_origin_config {
+      vpc_origin_id = aws_cloudfront_vpc_origin.cf_origin_bravo.id
     }
   }
 
   default_cache_behavior {
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "${var.resources_prefix_name}-cf-origin"
+    target_origin_id       = "${var.resources_prefix_name}-cf-origin-alpha"
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 

@@ -15,12 +15,22 @@ output "cloudfront_domain_name" {
   value       = aws_cloudfront_distribution.main.domain_name
 }
 
-output "vpc_origin_id" {
-  description = "CloudFront VPC Origin ID"
-  value       = aws_cloudfront_vpc_origin.cf_origin.id
+output "vpc_origin_alpha_id" {
+  description = "CloudFront VPC Origin Alpha ID"
+  value       = aws_cloudfront_vpc_origin.cf_origin_alpha.id
 }
 
-output "cf_origin_id" {
-  description = "CloudFront Origin ID"
-  value       = "${var.resources_prefix_name}-cf-origin"
+output "vpc_origin_bravo_id" {
+  description = "CloudFront VPC Origin Bravo ID"
+  value       = aws_cloudfront_vpc_origin.cf_origin_bravo.id
+}
+
+output "cf_origin_alpha_id" {
+  description = "CloudFront Origin Alpha ID"
+  value       = "${var.resources_prefix_name}-cf-origin-alpha"
+}
+
+output "cf_origin_bravo_id" {
+  description = "CloudFront Origin Bravo ID"
+  value       = "${var.resources_prefix_name}-cf-origin-bravo"
 }
