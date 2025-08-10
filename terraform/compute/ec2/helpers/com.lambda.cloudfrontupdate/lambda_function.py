@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import time
 import boto3
 from typing import Dict, List, Any
 
@@ -87,11 +88,31 @@ def get_asg_running_instances(asg_name: str) -> List[str]:
             return []
         
         asg = response['AutoScalingGroups'][0]
-        instance_ids = [instance['InstanceId'] for instance in asg['Instances'] 
-                       if instance['LifecycleState'] == 'InService']
+        
+        # Retry with exponential backoff for InService instances
+        max_retries = 5
+        base_delay = 2
+        
+        for attempt in range(max_retries):
+            instance_ids = [instance['InstanceId'] for instance in asg['Instances'] 
+                           if instance['LifecycleState'] == 'InService']
+            
+            if instance_ids:
+                break
+                
+            if attempt < max_retries - 1:
+                delay = base_delay ** (attempt + 1)
+                logger.info(f"No InService instances found, retrying in {delay}s (attempt {attempt + 1}/{max_retries})")
+                time.sleep(delay)
+                
+                # Re-fetch ASG data for next attempt
+                response = autoscaling.describe_auto_scaling_groups(
+                    AutoScalingGroupNames=[asg_name]
+                )
+                asg = response['AutoScalingGroups'][0]
         
         if not instance_ids:
-            logger.info("No running instances found in ASG")
+            logger.info("No InService instances found after all retries")
             return []
         
         # Get instance details
