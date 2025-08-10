@@ -7,6 +7,8 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
+data "aws_caller_identity" "current" {}
+
 ## -------------------------------------------------------------------------------------------------------------------
 ## Security Group for EFS
 ## -------------------------------------------------------------------------------------------------------------------
@@ -65,24 +67,20 @@ resource "aws_efs_mount_target" "main" {
 }
 
 ## -------------------------------------------------------------------------------------------------------------------
-## EFS File System Policy (20GB limit)
+## EFS File System Policy
 ## -------------------------------------------------------------------------------------------------------------------
 resource "aws_efs_file_system_policy" "main" {
   file_system_id = aws_efs_file_system.main.id
-
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Deny"
-        Principal = "*"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
         Action = "*"
         Resource = aws_efs_file_system.main.arn
-        Condition = {
-          NumericGreaterThan = {
-            "elasticfilesystem:ClientWrite" = "21474836480" # 20GB in bytes
-          }
-        }
       }
     ]
   })
