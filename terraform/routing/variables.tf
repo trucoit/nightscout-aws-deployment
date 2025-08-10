@@ -11,3 +11,8 @@ variable "container_port" {
   default     = 80
 }
 
+variable "autoscaling_group_name" {
+  description = "Name of the Auto Scaling Group containing the EC2 instance"
+  type        = string
+}
+

@@ -44,7 +44,7 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         
         # Get current running instances in the ASG
         running_instances = get_asg_running_instances(asg_name)
-        logger.info(f"Found {len(running_instances)} running instances: {running_instances}")
+        logger.info(f"Found Running instance: {running_instances}")
         
         # Update CloudFront distribution
         update_cloudfront_origins(distribution_id, running_instances, container_port)

@@ -4,6 +4,26 @@
 ## Data Sources
 ## -------------------------------------------------------------------------------------------------------------------
 data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+data "aws_autoscaling_group" "ecs" {
+  name = var.autoscaling_group_name
+}
+
+data "aws_instances" "ecs" {
+  filter {
+    name   = "tag:aws:autoscaling:groupName"
+    values = [var.autoscaling_group_name]
+  }
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
+  }
+}
+
+data "aws_instance" "ecs" {
+  instance_id = data.aws_instances.ecs.ids[0]
+}
 
 
 ## -------------------------------------------------------------------------------------------------------------------
@@ -24,7 +44,7 @@ resource "aws_cloudfront_origin_access_control" "main" {
 resource "aws_cloudfront_vpc_origin" "cf_origin" {
   vpc_origin_endpoint_config {
     name                   = "${var.resources_prefix_name}-vpc-origin"
-    arn                    = "arn:aws:ec2:us-east-1:123456789012:instance/i-1234567890abcdef0"
+    arn                    = "arn:aws:ec2:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:instance/${data.aws_instances.ecs.ids[0]}"
     http_port              = 80
     https_port             = 443
     origin_protocol_policy = "http-only"
@@ -52,7 +72,7 @@ resource "aws_cloudfront_distribution" "main" {
 
   # Default placeholder origin - will be updated by Lambda
   origin {
-    domain_name = "placeholder-for-private-instance-ip"
+    domain_name = data.aws_instance.ecs.private_dns
     origin_id   = "${var.resources_prefix_name}-cf-origin"
 
     vpc_origin_config {
@@ -63,7 +83,7 @@ resource "aws_cloudfront_distribution" "main" {
   default_cache_behavior {
     allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = aws_cloudfront_vpc_origin.cf_origin.id
+    target_origin_id       = "${var.resources_prefix_name}-cf-origin"
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 
@@ -75,9 +95,9 @@ resource "aws_cloudfront_distribution" "main" {
       }
     }
 
-    min_ttl     = 10
-    default_ttl = 1400
-    max_ttl     = 86400
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
   }
 
   restrictions {

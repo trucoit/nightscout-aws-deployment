@@ -76,8 +76,9 @@ module "compute" {
 module "routing" {
   source = "./routing"
 
-  resources_prefix_name = var.resources_prefix_name
-  container_port       = var.container_port
+  resources_prefix_name    = var.resources_prefix_name
+  container_port          = var.container_port
+  autoscaling_group_name  = module.compute.autoscaling_group_name
 }
 
 ## -------------------------------------------------------------------------------------------------------------------
