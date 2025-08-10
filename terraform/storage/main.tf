@@ -76,9 +76,7 @@ resource "aws_efs_file_system_policy" "main" {
     Statement = [
       {
         Effect = "Allow"
-        Principal = {
-          AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
-        }
+        Principal = "*"
         Action = "*"
         Resource = aws_efs_file_system.main.arn
       }
