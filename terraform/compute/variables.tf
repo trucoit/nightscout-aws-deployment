@@ -76,25 +76,6 @@ variable "container_environment" {
 ## -------------------------------------------------------------------------------------------------------------------
 ## Auto Scaling Group Configuration
 ## -------------------------------------------------------------------------------------------------------------------
-
-variable "asg_min_size" {
-  description = "Minimum size of the Auto Scaling Group"
-  type        = number
-  default     = 0
-}
-
-variable "asg_max_size" {
-  description = "Maximum size of the Auto Scaling Group"
-  type        = number
-  default     = 2
-}
-
-variable "asg_desired_capacity" {
-  description = "Desired capacity of the Auto Scaling Group"
-  type        = number
-  default     = 1
-}
-
 variable "instance_types" {
   description = "List of EC2 instance types for mixed instances policy (2-4GB RAM, prioritized by cost)"
   type        = list(string)

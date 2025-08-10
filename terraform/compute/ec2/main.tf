@@ -57,9 +57,9 @@ resource "aws_autoscaling_group" "ecs" {
   health_check_grace_period = 300
   protect_from_scale_in     = true
 
-  min_size         = var.asg_min_size
-  max_size         = var.asg_max_size
-  desired_capacity = var.asg_desired_capacity
+  min_size         = 1
+  max_size         = 1
+  desired_capacity = 1
 
   mixed_instances_policy {
     launch_template {
