@@ -141,76 +141,59 @@ def get_asg_running_instances(asg_name: str) -> List[str]:
         logger.error(f"Error getting ASG instances: {str(e)}")
         raise
 
-def update_cloudfront_origins(distribution_id: str, instance_ips: List[str], container_port: str) -> None:
+def update_cloudfront_origins(distribution_id: str, instance_data: Dict[str, str], container_port: str) -> None:
     """
-    Update CloudFront distribution with new origin configuration.
+    Update CloudFront distribution with new origin configuration for a single EC2 instance.
     
     Args:
         distribution_id: CloudFront distribution ID
-        instance_ips: List of instance private IP addresses
+        instance_data: Dict containing 'private_dns' and 'instance_arn' of the EC2 instance
         container_port: Container port number
     """
     try:
+        # Get environment variables for origin IDs
+        vpc_origin_id = os.environ['VPC_ORIGIN_ID']
+        cf_origin_id = os.environ['CF_ORIGIN_ID']
+        
+        # Update VPC origin ARN
+        cloudfront.update_vpc_origin(
+            Id=vpc_origin_id,
+            VpcOriginEndpointConfig={
+                'Name': f"{os.environ.get('RESOURCES_PREFIX', 'nightscout')}-vpc-origin",
+                'Arn': instance_data['instance_arn'],
+                'HTTPPort': int(container_port),
+                'HTTPSPort': 443,
+                'OriginProtocolPolicy': 'http-only',
+                'OriginSslProtocols': {
+                    'Items': ['TLSv1.2'],
+                    'Quantity': 1
+                }
+            }
+        )
+        
         # Get current distribution config
         response = cloudfront.get_distribution_config(Id=distribution_id)
-        config = response['DistributionConfig']
+        config = response['DistributionConfig'].copy()
         etag = response['ETag']
         
-        logger.info(f"Current distribution has {len(config['Origins']['Items'])} origins")
+        # Update the origin domain name
+        origins = config['Origins']['Items']
+        for origin in origins:
+            if origin['Id'] == cf_origin_id:
+                origin['DomainName'] = instance_data['private_dns']
+                logger.info(f"Updated origin {cf_origin_id} with DNS: {instance_data['private_dns']}")
+                break
         
-        # Create new origins list
-        new_origins = []
-        for i, ip in enumerate(instance_ips):
-            origin_id = f"ec2-instance-{i+1}"
-            new_origins.append({
-                'Id': origin_id,
-                'DomainName': ip,
-                'CustomOriginConfig': {
-                    'HTTPPort': int(container_port),
-                    'HTTPSPort': 443,
-                    'OriginProtocolPolicy': 'http-only',
-                    'OriginSslProtocols': {
-                        'Quantity': 1,
-                        'Items': ['TLSv1.2']
-                    }
-                }
-            })
-        
-        # If no instances, create a placeholder origin
-        if not new_origins:
-            logger.warning("No running instances found, creating placeholder origin")
-            new_origins.append({
-                'Id': 'placeholder',
-                'DomainName': 'example.com',
-                'CustomOriginConfig': {
-                    'HTTPPort': int(container_port),
-                    'HTTPSPort': 443,
-                    'OriginProtocolPolicy': 'http-only',
-                    'OriginSslProtocols': {
-                        'Quantity': 1,
-                        'Items': ['TLSv1.2']
-                    }
-                }
-            })
-        
-        # Update origins in config
-        config['Origins'] = {
-            'Quantity': len(new_origins),
-            'Items': new_origins
-        }
-        
-        # Update default cache behavior to use first origin
-        config['DefaultCacheBehavior']['TargetOriginId'] = new_origins[0]['Id']
+        config['Origins']['Items'] = origins
         
         # Update distribution
-        logger.info(f"Updating distribution with {len(new_origins)} origins")
         cloudfront.update_distribution(
             Id=distribution_id,
             DistributionConfig=config,
             IfMatch=etag
         )
         
-        logger.info(f"Successfully updated CloudFront distribution {distribution_id}")
+        logger.info(f"Successfully updated CloudFront distribution {distribution_id} and VPC origin {vpc_origin_id}")
         
     except Exception as e:
         logger.error(f"Error updating CloudFront distribution: {str(e)}")

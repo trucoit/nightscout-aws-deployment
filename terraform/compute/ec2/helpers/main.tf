@@ -140,6 +140,8 @@ resource "aws_lambda_function" "cloudfront_update" {
     variables = {
       CLOUDFRONT_DISTRIBUTION_ID = var.cloudfront_distribution_id
       CONTAINER_PORT            = var.container_port
+      VPC_ORIGIN_ID             = var.vpc_origin_id
+      CF_ORIGIN_ID              = var.cf_origin_id
       LOG_LEVEL                 = "INFO"
     }
   }

@@ -14,3 +14,13 @@ output "cloudfront_domain_name" {
   description = "CloudFront Distribution domain name"
   value       = aws_cloudfront_distribution.main.domain_name
 }
+
+output "vpc_origin_id" {
+  description = "CloudFront VPC Origin ID"
+  value       = aws_cloudfront_vpc_origin.cf_origin.id
+}
+
+output "cf_origin_id" {
+  description = "CloudFront Origin ID"
+  value       = "${var.resources_prefix_name}-cf-origin"
+}
