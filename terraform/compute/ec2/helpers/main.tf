@@ -41,7 +41,7 @@ resource "aws_autoscaling_notification" "asg_notifications" {
 data "archive_file" "cloudfront_update_lambda_zip" {
   type        = "zip"
   source_dir  = "${path.module}/com.lambda.cloudfrontupdate"
-  output_path = "${path.module}/cloudfront_update_lambda.zip"
+  output_path = "${path.module}/com.lambda.cloudfrontupdate.zip"
   excludes    = ["README.md", "test_event.json"]
 }
 
